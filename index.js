@@ -45,6 +45,9 @@ app.get('/movies', (req, res) => {
     res.json(movies);
   });
 
+  app.get('/users', (req, res) => {
+    res.json(users);
+  });
 
 app.get('/documentation', (req, res) => {                  
   res.sendFile('public/documentation.html', { root: __dirname });
