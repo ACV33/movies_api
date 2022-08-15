@@ -1,3 +1,170 @@
-<h1> My Movie Api </h1>
+<!DOCTYPE html>
+<html lang="en">
 
-<p> With this Movie Api, users will be able to receive information on movies, directors, and genres or learn more about movies they've watched or are interested in. It will allow a user to create a profile where data can be saved on their favorite  movies. </p>
+<head>
+    <title>Documentation</title>
+</head>
+
+<body>
+    <h1>My Movie API Documentation</h1>
+    <p>The web application will provide users with access to information about different
+        movies, directors, and genres. Users will be able to sign up, update their
+        personal information, and create a list of their favorite movies</p>
+    <table>
+        <tr>
+            <th>Task</th>
+            <th>URL</th>
+            <th>HTTP Method</th>
+            <th>Request Body</th>
+            <th>Response Body</th>
+        </tr>
+        <tr>
+            <td>Get the list of all the movie data</td>
+            <td>/movies</td>
+            <td>GET</td>
+            <td> Not Applicable</td>
+            <td>A JSON object holding data about all the movies</td>
+        </tr>
+        <tr>
+            <td>Get the data of a genre by name</td>
+            <td>/movies/genres/[Name]</td>
+            <td>GET</td>
+            <td> Not Applicable</td>
+            <td>A JSON object holding data about the requested genre, structure as:
+                <span>
+                    {
+                        "name": "drama",
+                        "description": "The drama genre features stories with high stakes and a lot of conflicts. They're plot-driven and demand that every character and scene move the story forward. Dramas follow a clearly defined narrative plot structure, portraying real-life scenarios or extreme situations with emotionally-driven characters."
+                    }
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td>Get the data of a director by name</td>
+            <td>/movies/director/[Name]</td>
+            <td>GET</td>
+            <td> Not Applicable</td>
+            <td>A JSON object holding data about the requested director, structure as:
+                <span>
+                    {
+                        "name": "Tim Burton",
+                        "bio": "Timothy Walter Burton was born in Burbank, California, to Jean Rae (Erickson), who owned a cat-themed gift shop, and William Reed Burton, who worked for the Burbank Park and Recreation Department. He spent most of his childhood as a recluse, drawing cartoons, and watching old movies",
+                        "birth-year": 1958
+                    }
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td>Get the data of one single movie by its title</td>
+            <td>/movies/[Title]</td>
+            <td>GET</td>
+            <td> Not Applicable</td>
+            <td>A JSON object holding data about a single movie, including title, director, description, genre and image
+                URL, structure as:
+                <span>
+                    {
+                        "title": "Goodfellas",
+                        "director": {
+                            "name": "Martin Scorsese",
+                            "bio": "Martin Charles Scorsese was born on November 17, 1942 in Queens, New York City, to Catherine Scorsese (née Cappa) and Charles Scorsese, who both worked in Manhattan's garment district, and whose families both came from Palermo, Sicily. He was raised in the neighborhood of Little Italy, which later provided the inspiration for several of his films. Scorsese earned a B.S. degree in film communications in 1964, followed by an M.A. in the same field in 1966 at New York University's School of Film. During this time, he made numerous prize-winning short films including The Big Shave (1967), and directed his first feature film, Who's That Knocking at My Door (1967).",
+                            "birth-year": 1942
+                        },
+                        "description": "The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners Jimmy Conway and Tommy DeVito in the Italian-American crime syndicate.",
+                        "genre": {
+                            "name": "drama",
+                            "description": "The drama genre features stories with high stakes and a lot of conflicts. They're plot-driven and demand that every character and scene move the story forward. Dramas follow a clearly defined narrative plot structure, portraying real-life scenarios or extreme situations with emotionally-driven characters."
+                        },
+                        "imageURL": "https://en.wikipedia.org/wiki/File:Goodfellas.jpg"
+                    },
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td>Register a new user</td>
+            <td>/users</td>
+            <td>POST</td>
+            <td>A JSON object holding data about the new user, structure as:
+                <span>
+                    {
+                    "id":3,
+                    "name":"Katia",
+                    "favortieMovies":[]
+                    }
+                </span>
+            </td>
+            <td>A JSON object holding data about the new user, sturcture as:
+                <span>
+                    {
+                    "id":3,
+                    "name":"Katia",
+                    "favoriteMovies":[]
+                    }
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td>Deregister a user</td>
+            <td>/users/[ID]</td>
+            <td>DELETE</td>
+            <td>Not Applicable</td>
+            <td>A message indicating that the user has deregistered</td>
+        </tr>
+        <tr>
+            <td>Updating a user's name</td>
+            <td>/users/[ID]</td>
+            <td>PUT</td>
+            <td>A JSON object holding data about the updated user, structure as:
+                <span>
+                    {
+                        "id": "1",
+                        "name": "Ashli",
+                        "favoriteMovies": ["The Labyrinth"]
+                   },
+                </span>
+            </td>
+            <td>A JSON object holding data about the updated user, sturcture as:
+                <span>
+                    {
+                        "id": "1",
+                        "name": "Ashli",
+                        "favoriteMovies": ["The Labyrinth"]
+                   },
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td>Add a movie to the list of favorites</td>
+            <td>/users/[ID]/[MovieTitle]</td>
+            <td>POST</td>
+            <td>A JSON object holding data about movie to add, structure as:
+                <span>
+                    {
+                        "title": "Goodfellas",
+                        "director": {
+                            "name": "Martin Scorsese",
+                            "bio": "Martin Charles Scorsese was born on November 17, 1942 in Queens, New York City, to Catherine Scorsese (née Cappa) and Charles Scorsese, who both worked in Manhattan's garment district, and whose families both came from Palermo, Sicily. He was raised in the neighborhood of Little Italy, which later provided the inspiration for several of his films. Scorsese earned a B.S. degree in film communications in 1964, followed by an M.A. in the same field in 1966 at New York University's School of Film. During this time, he made numerous prize-winning short films including The Big Shave (1967), and directed his first feature film, Who's That Knocking at My Door (1967).",
+                            "birth-year": 1942
+                        },
+                        "description": "The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners Jimmy Conway and Tommy DeVito in the Italian-American crime syndicate.",
+                        "genre": {
+                            "name": "drama",
+                            "description": "The drama genre features stories with high stakes and a lot of conflicts. They're plot-driven and demand that every character and scene move the story forward. Dramas follow a clearly defined narrative plot structure, portraying real-life scenarios or extreme situations with emotionally-driven characters."
+                        },
+                        "imageURL": "https://en.wikipedia.org/wiki/File:Goodfellas.jpg"
+                    }
+                </span>
+            </td>
+            <td>A message indicating that the movie has been added</td>
+        </tr>
+        <tr>
+            <td>Remove a movie from the list of favorites by title</td>
+            <td>/users/[ID]/[MovieTitle]</td>
+            <td>DELETE</td>
+            <td>None</td>
+            <td>A message indicating that the movie was deleted</td>
+        </tr>
+    </table>
+
+</body>
+
+</html>
