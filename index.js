@@ -1,21 +1,66 @@
-const express = require("express");
-const app = express(),
-    uuid = require("uuid"),
-    bodyParser = require("body-parser");
+const express = require('express'),
+app = express(),
+morgan = require('morgan'),  
+bodyParser = require('body-parser'),
+uuid = require("uuid"),
+mongoose = require('mongoose');
+
+
+//imports models
+const Models = require('./models.js');
+
+// imports users and movies
+const Movies = Models.Movie;
+const Users = Models.User;
+const Genres = Models.Genre;
+const Directors = Models.Director;
+
+
+//Database connection
+mongoose.connect('mongodb://localhost:27017/myFlixDB', { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true, 
+});
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+let auth = require('./auth')(app);
+const passport = require('passport');
+require('./passport');
+
+// logging with morgan (middleware)
+app.use(morgan("common"));
 
 let users = [
-    {
-        "id": "1",
-        "name": "Ashli",
-        "favoriteMovies": ["The Labyrinth"]
-   },
-    {
-        "id": "2",
-        "name": "Ally",
-        "favoriteMovies": ["Dirty Dancing"]
-    }
+  {
+    "FavoriteMovies": [],
+    "_id": "630cc44af3183409bf83b444",
+    "Name": "Ashli Vaccaro",
+    "Password": "1234",
+    "Email": "ashli@gmail.com",
+    "Birth": "03/30/1992",
+    "favoriteMovies": [
+        "630a5071ef1584a0e17b8740"
+    ]
+},
+{
+    "FavoriteMovies": [],
+    "_id": "630cc4acf3183409bf83b445",
+    "Name": "Allyson Vaccaro",
+    "Password": "4321",
+    "Email": "ally@gmail.com",
+    "Birth": "08/04/1987",
+    "favoriteMovies": []
+},
+{
+    "_id": "630d1dd0a408e77e28e0bd3f",
+    "Username": "Marley",
+    "Password": "catnip1",
+    "Email": "marley@gmail.com",
+    "FavoriteMovies": [],
+    "__v": 0
+}
 ]
 let movies = [
   {
@@ -91,23 +136,50 @@ let movies = [
   },
 ];
 
-// allows  new user to register
-// CREATE
-app.post("/users", (req, res) => {
-  const newUser = req.body;
 
-  if (newUser.name) {
-    newUser.id = uuid.v4();
-    users.push(newUser);
-  res.status(201).json(newUser)  
-} else {
-  res.status(400).send('users need names')
-}
+// allows user to register
+app.post('/users', (req, res) => {
+  Users.findOne({ Username: req.body.Username })
+    .then((user) => {
+      if (user) {
+        return res.status(400).send(req.body.Username + 'already exists');
+      } else {
+        Users
+          .create({
+            Username: req.body.Username,
+            Password: req.body.Password,
+            Email: req.body.Email,
+            Birthday: req.body.Birthday
+          })
+          .then((user) =>{res.status(201).json(user) })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).send('Error: ' + error);
+        })
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error: ' + error);
+    });
 });
+
+// Get all users
+app.get('/users', (req, res) => {
+  Users.find()
+    .then((users) => {
+      res.status(201).json(users);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
+});
+    
 
 // allows users to update their info
 // UPDATE
-app.put("/users/:id", (req, res) => {
+app.put('/users/:id', (req, res) => {
   const { id } = req.params;
   const updatedUser = req.body;
 
@@ -121,9 +193,29 @@ if (user) {
 }
 });
 
-// allows users to add a movie to their favorites
-// POST
-app.post("/users/:id/:movieTitle", (req, res) => {
+app.put('/users/:Username', (req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username }, { $set:
+    {
+      Username: req.body.Username,
+      Password: req.body.Password,
+      Email: req.body.Email,
+      Birthday: req.body.Birthday
+    }
+  },
+  { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if(err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.json(updatedUser);
+    }
+  });
+});
+
+// // allows users to add a movie to their favorites
+// // POST
+app.post('/users/:id/:movieTitle', (req, res) => {
   const { id, movieTitle } = req.params;
 
  let user = users.find( user => user.id == id);
@@ -136,9 +228,9 @@ if (user) {
 }
 });
 
-// allows users to delete a movie
-// DELETE
-app.delete("/users/:id/:movieTitle", (req, res) => {
+// // allows users to delete a movie
+// // DELETE
+app.delete('/users/:id/:movieTitle', (req, res) => {
   const { id, movieTitle } = req.params;
 
  let user = users.find( user => user.id == id);
@@ -151,9 +243,9 @@ if (user) {
 }
 });
 
-// allows users to deregister
-// DELETE
-app.delete("/users/:id", (req, res) => {
+// // allows users to deregister
+// // DELETE
+app.delete('/users/:id', (req, res) => {
   const { id } = req.params;
 
  let user = users.find( user => user.id == id);
@@ -171,20 +263,27 @@ if (user) {
 
 // returns list of all movies to user
 // READ
-app.get("/movies", (req, res) => {
-    res.json(movies);
-  });
+app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
+  Movies.find()
+    .then((movies) => {
+      res.status(201).json(movies);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error: ' + error);
+    });
+});
 
   // Gets the data about a single movie by title
   // READ
-app.get("/movies/:title", (req, res) => {
+app.get('/movies/:title', passport.authenticate('jwt', {session: false}), (req, res) => {
   res.json(movies.find((movies) =>
     { return movies.title === req.params.title }));
 });
 
-//Gets the data by genre
-// READ
-app.get("/movies/genre/:genreName", (req, res) => {
+// //Gets the data by genre
+// // READ
+app.get('/movies/genre/:genreName', passport.authenticate('jwt', {session: false}), (req, res) => {
   const { genreName } = req.params;
   const genre = movies.find(movie => movie.genre.name === genreName).genre;
 
@@ -195,9 +294,9 @@ app.get("/movies/genre/:genreName", (req, res) => {
   }
 });
 
-// gets the data about the director
-// READ
-app.get("/movies/director/:directorName", (req, res) => {
+// // gets the data about the director
+// // READ
+app.get('/movies/director/:directorName',passport.authenticate('jwt', {session: false}), (req, res) => {
   const { directorName } = req.params;
   const director = movies.find(movie => movie.director.name === directorName).director;
 
