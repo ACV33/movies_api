@@ -1,21 +1,55 @@
-const express = require("express");
-const app = express(),
+const express = require("express"),
     uuid = require("uuid"),
     bodyParser = require("body-parser");
 
+const morgan = require("morgan");   
+const app = express();   
+const mongoose = require('mongoose');
+const Models = require('./models.js');
+
+const Movies = Models.Movie;
+const Users = Models.User;
+const Genres = Models.Genre;
+const Directors = Models.Director;
+
+mongoose.connect('mongodb://localhost:27017/myFlixDB', { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true, 
+});
+
 app.use(bodyParser.json());
 
+app.use(morgan("common"));
+
 let users = [
-    {
-        "id": "1",
-        "name": "Ashli",
-        "favoriteMovies": ["The Labyrinth"]
-   },
-    {
-        "id": "2",
-        "name": "Ally",
-        "favoriteMovies": ["Dirty Dancing"]
-    }
+  {
+    "FavoriteMovies": [],
+    "_id": "630cc44af3183409bf83b444",
+    "Name": "Ashli Vaccaro",
+    "Password": "1234",
+    "Email": "ashli@gmail.com",
+    "Birth": "03/30/1992",
+    "favoriteMovies": [
+        "630a5071ef1584a0e17b8740"
+    ]
+},
+{
+    "FavoriteMovies": [],
+    "_id": "630cc4acf3183409bf83b445",
+    "Name": "Allyson Vaccaro",
+    "Password": "4321",
+    "Email": "ally@gmail.com",
+    "Birth": "08/04/1987",
+    "favoriteMovies": []
+},
+{
+    "_id": "630d1dd0a408e77e28e0bd3f",
+    "Username": "Marley",
+    "Password": "catnip1",
+    "Email": "marley@gmail.com",
+    "FavoriteMovies": [],
+    "__v": 0
+}
 ]
 let movies = [
   {
@@ -91,18 +125,46 @@ let movies = [
   },
 ];
 
-// allows  new user to register
-// CREATE
-app.post("/users", (req, res) => {
-  const newUser = req.body;
+//add a new user
 
-  if (newUser.name) {
-    newUser.id = uuid.v4();
-    users.push(newUser);
-  res.status(201).json(newUser)  
-} else {
-  res.status(400).send('users need names')
-}
+
+
+app.post('/users', (req, res) => {
+  Users.findOne({ Username: req.body.Username })
+    .then((user) => {
+      if (user) {
+        return res.status(400).send(req.body.Username + 'already exists');
+      } else {
+        Users
+          .create({
+            Username: req.body.Username,
+            Password: req.body.Password,
+            Email: req.body.Email,
+            Birthday: req.body.Birthday
+          })
+          .then((user) =>{res.status(201).json(user) })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).send('Error: ' + error);
+        })
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error: ' + error);
+    });
+});
+
+// Get all users
+app.get('/users', (req, res) => {
+  Users.find()
+    .then((users) => {
+      res.status(201).json(users);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
 // allows users to update their info
@@ -121,8 +183,28 @@ if (user) {
 }
 });
 
-// allows users to add a movie to their favorites
-// POST
+app.put('/users/:Username', (req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username }, { $set:
+    {
+      Username: req.body.Username,
+      Password: req.body.Password,
+      Email: req.body.Email,
+      Birthday: req.body.Birthday
+    }
+  },
+  { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if(err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.json(updatedUser);
+    }
+  });
+});
+
+// // allows users to add a movie to their favorites
+// // POST
 app.post("/users/:id/:movieTitle", (req, res) => {
   const { id, movieTitle } = req.params;
 
@@ -136,8 +218,8 @@ if (user) {
 }
 });
 
-// allows users to delete a movie
-// DELETE
+// // allows users to delete a movie
+// // DELETE
 app.delete("/users/:id/:movieTitle", (req, res) => {
   const { id, movieTitle } = req.params;
 
@@ -151,8 +233,8 @@ if (user) {
 }
 });
 
-// allows users to deregister
-// DELETE
+// // allows users to deregister
+// // DELETE
 app.delete("/users/:id", (req, res) => {
   const { id } = req.params;
 
@@ -182,8 +264,8 @@ app.get("/movies/:title", (req, res) => {
     { return movies.title === req.params.title }));
 });
 
-//Gets the data by genre
-// READ
+// //Gets the data by genre
+// // READ
 app.get("/movies/genre/:genreName", (req, res) => {
   const { genreName } = req.params;
   const genre = movies.find(movie => movie.genre.name === genreName).genre;
@@ -195,8 +277,8 @@ app.get("/movies/genre/:genreName", (req, res) => {
   }
 });
 
-// gets the data about the director
-// READ
+// // gets the data about the director
+// // READ
 app.get("/movies/director/:directorName", (req, res) => {
   const { directorName } = req.params;
   const director = movies.find(movie => movie.director.name === directorName).director;
