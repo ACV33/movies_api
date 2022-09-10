@@ -1,24 +1,40 @@
-const express = require("express"),
-    uuid = require("uuid"),
-    bodyParser = require("body-parser");
+const express = require('express'),
+app = express(),
+morgan = require('morgan'),  
+bodyParser = require('body-parser'),
+uuid = require("uuid"),
+mongoose = require('mongoose');
 
-const morgan = require("morgan");   
-const app = express();   
-const mongoose = require('mongoose');
+
+//imports models
 const Models = require('./models.js');
 
+// imports users and movies
 const Movies = Models.Movie;
 const Users = Models.User;
 const Genres = Models.Genre;
 const Directors = Models.Director;
 
+
+//Database connection
 mongoose.connect('mongodb://localhost:27017/myFlixDB', { 
   useNewUrlParser: true, 
   useUnifiedTopology: true, 
 });
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
+const cors = require('cors');
+app.use(cors());
+
+const { check, validationResult } = require('express-validator');
+
+let auth = require('./auth')(app);
+const passport = require('passport');
+require('./passport');
+
+// logging with morgan (middleware)
 app.use(morgan("common"));
 
 let users = [
@@ -125,11 +141,23 @@ let movies = [
   },
 ];
 
-//add a new user
 
+// allows user to register
+app.post('/users', 
+[
+  check('Username', 'Username is required').isLength({min: 5}),
+  check('Username', 'Username contains non alpanumeric characters - not allowed.').isAlphanumeric(),
+  check('Password', 'Password is required').not().isEmpty(),
+  check('Email', 'Email does not appear to be valid').isEmail()
+],(req, res) => {
+  let errors = validationResult(req);
 
+  if (!errors.isEmpty()){
+    return res.status(422).json({
+      errors: errors.array() });
+  }
 
-app.post('/users', (req, res) => {
+  let hashedPassword = Users.hashPassword(req.body.Password);
   Users.findOne({ Username: req.body.Username })
     .then((user) => {
       if (user) {
@@ -138,7 +166,7 @@ app.post('/users', (req, res) => {
         Users
           .create({
             Username: req.body.Username,
-            Password: req.body.Password,
+            Password: hashaedPassword,
             Email: req.body.Email,
             Birthday: req.body.Birthday
           })
@@ -166,10 +194,11 @@ app.get('/users', (req, res) => {
       res.status(500).send('Error: ' + err);
     });
 });
+    
 
 // allows users to update their info
 // UPDATE
-app.put("/users/:id", (req, res) => {
+app.put('/users/:id', (req, res) => {
   const { id } = req.params;
   const updatedUser = req.body;
 
@@ -205,7 +234,7 @@ app.put('/users/:Username', (req, res) => {
 
 // // allows users to add a movie to their favorites
 // // POST
-app.post("/users/:id/:movieTitle", (req, res) => {
+app.post('/users/:id/:movieTitle', (req, res) => {
   const { id, movieTitle } = req.params;
 
  let user = users.find( user => user.id == id);
@@ -220,7 +249,7 @@ if (user) {
 
 // // allows users to delete a movie
 // // DELETE
-app.delete("/users/:id/:movieTitle", (req, res) => {
+app.delete('/users/:id/:movieTitle', (req, res) => {
   const { id, movieTitle } = req.params;
 
  let user = users.find( user => user.id == id);
@@ -235,7 +264,7 @@ if (user) {
 
 // // allows users to deregister
 // // DELETE
-app.delete("/users/:id", (req, res) => {
+app.delete('/users/:id', (req, res) => {
   const { id } = req.params;
 
  let user = users.find( user => user.id == id);
@@ -253,20 +282,27 @@ if (user) {
 
 // returns list of all movies to user
 // READ
-app.get("/movies", (req, res) => {
-    res.json(movies);
-  });
+app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
+  Movies.find()
+    .then((movies) => {
+      res.status(201).json(movies);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error: ' + error);
+    });
+});
 
   // Gets the data about a single movie by title
   // READ
-app.get("/movies/:title", (req, res) => {
+app.get('/movies/:title', passport.authenticate('jwt', {session: false}), (req, res) => {
   res.json(movies.find((movies) =>
     { return movies.title === req.params.title }));
 });
 
 // //Gets the data by genre
 // // READ
-app.get("/movies/genre/:genreName", (req, res) => {
+app.get('/movies/genre/:genreName', passport.authenticate('jwt', {session: false}), (req, res) => {
   const { genreName } = req.params;
   const genre = movies.find(movie => movie.genre.name === genreName).genre;
 
@@ -279,7 +315,7 @@ app.get("/movies/genre/:genreName", (req, res) => {
 
 // // gets the data about the director
 // // READ
-app.get("/movies/director/:directorName", (req, res) => {
+app.get('/movies/director/:directorName',passport.authenticate('jwt', {session: false}), (req, res) => {
   const { directorName } = req.params;
   const director = movies.find(movie => movie.director.name === directorName).director;
 
@@ -295,8 +331,8 @@ app.get("/documentation", (req, res) => {
 });
 
 
-// listen for requests
-app.listen(8080, () => {
-  console.log("Your app is listening on port 8080.");
+const port = process.env.PORT || 8080;
+app.listen(port, '0.0.0.0', () => {
+  console.log('Listening on Port' + port);
 });
 
