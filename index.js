@@ -17,7 +17,7 @@ const Directors = Models.Director;
 
 
 //Database connection
-mongoose.connect('mongodb://localhost:27017/myFlixDB', { 
+mongoose.connect( process.env.CONNECTION_URI , { 
   useNewUrlParser: true, 
   useUnifiedTopology: true, 
 });
@@ -336,3 +336,8 @@ app.listen(port, '0.0.0.0', () => {
   console.log('Listening on Port' + port);
 });
 
+
+// mongosh "mongodb+srv://ashli-cluster.dlfjrip.mongodb.net/myFlixDB" --apiVersion 1 --username Ashli-Vaccaro
+
+
+// mongodb+srv://Ashli-Vaccaro:HaHBK7bErWA8AXyX@ashli-cluster.dlfjrip.mongodb.net/?retryWrites=true&w=majority
