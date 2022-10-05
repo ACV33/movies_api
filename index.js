@@ -183,12 +183,12 @@ app.delete('/users/:Username', /*passport.authenticate('jwt', { session: false }
 
 // returns list of all movies to user
 // READ
-app.get('/movies', /*passport.authenticate('jwt', { session: false }),*/(req, res) => {
+app.get('/movies', (req, res) => {
   Movies.find()
-    .then((movies) => {
+    .then(function (movies) {
       res.status(201).json(movies);
     })
-    .catch((error) => {
+    .catch(function (error) {
       console.error(error);
       res.status(500).send('Error: ' + error);
     });
