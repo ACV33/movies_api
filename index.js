@@ -117,7 +117,7 @@ app.get('/users/:Name', passport.authenticate('jwt', { session: false }), (req, 
 
 // allows users to update their info
 // UPDATE
-let users = users.find(users => users.Name == Name);
+// let users = users.find(users => users.Name == Name);
 
 app.put('/users/:Name', passport.authenticate('jwt', { session: false }), (req, res) => {
   const Name = req.params;
