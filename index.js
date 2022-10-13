@@ -17,7 +17,7 @@ const Directors = Models.Director;
 
 
 //Database connection
-mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('process.env.CONNECTION_URI', { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -117,7 +117,7 @@ app.get('/users/:Name', passport.authenticate('jwt', { session: false }), (req, 
 
 // allows users to update their info
 // UPDATE
-let users = users.find(users => users.Name == Name);
+// let users = users.find(users => users.Name == Name);
 
 app.put('/users/:Name', passport.authenticate('jwt', { session: false }), (req, res) => {
   const Name = req.params;
