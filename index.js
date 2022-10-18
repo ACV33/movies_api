@@ -118,12 +118,21 @@ app.put(
     check("Email", "Email does not appear to be valid").isEmail(),
   ],
   (req, res) => {
+    let errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({
+        errors: errors.array()
+      });
+    }
+
+    let hashedPassword = Users.hashPassword(req.body.Password);
     Users.findOneAndUpdate(
       { Username: req.params.Name },
       {
         $set: {
           Username: req.body.Name,
-          Password: req.body.Password,
+          Password: hashedPassword,
           Email: req.body.Email,
           Birthday: req.body.Birthday,
         },
@@ -132,14 +141,12 @@ app.put(
       (err, updatedUser) => {
         if (err) {
           console.error(err);
-          res.status(500).send("Error: " + err);
+          res.status(500).send('Error: ' + err);
         } else {
           res.json(updatedUser);
         }
-      }
-    );
-  }
-);
+      });
+  });
 
 
 // // allows users to add a movie to their favorites
@@ -169,15 +176,17 @@ app.delete('/users/:Username/movies/:Movie', passport.authenticate('jwt', { sess
   Users.findOneAndUpdate({ Username: req.params.Username }, {
     $pull: { FavoriteMovies: req.params.Movie }
   },
-    {
-      if(err) {
+    { new: true }, // This line makes sure that the updated document is returned
+    (err, updatedUser) => {
+      if (err) {
         console.error(err);
         res.status(500).send('Error: ' + err);
-      }, else() {
+      } else {
         res.json(updatedUser);
-      },
+      }
     });
 });
+
 
 
 // // allows users to deregister
