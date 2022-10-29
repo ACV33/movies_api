@@ -10,6 +10,7 @@ const express = require('express'),
 const Models = require('./models.js');
 
 // imports users and movies
+// imports users and movies
 const Movies = Models.Movie;
 const Users = Models.User;
 const Genres = Models.Genre;
@@ -20,6 +21,7 @@ const Directors = Models.Director;
 mongoose.connect('mongodb+srv://Ashli-Vaccaro:HaHBK7bErWA8AXyX@ashli-cluster.dlfjrip.mongodb.net/myFlixDB?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const cors = require('cors');
@@ -43,6 +45,11 @@ let auth = require('./auth')(app);
 const passport = require('passport');
 require('./passport');
 
+// logging with morgan (middleware)
+app.use(morgan("common"));
+
+// logging with morgan (middleware)
+app.use(morgan("common"));
 // logging with morgan (middleware)
 app.use(morgan("common"));
 
@@ -115,6 +122,7 @@ app.get('/users/:username', passport.authenticate('jwt', { session: false }), (r
 });
 
 
+
 // allows users to update their info
 // UPDATE
 app.put(
@@ -160,6 +168,7 @@ app.put(
   });
 
 
+
 // // allows users to add a movie to their favorites
 // // POST
 //working
@@ -197,6 +206,8 @@ app.delete('/users/:Username/movies/:Movie', passport.authenticate('jwt', { sess
       }
     });
 });
+
+
 
 
 
@@ -241,13 +252,18 @@ app.get('/movies/:title', passport.authenticate('jwt', { session: false }), (req
 });
 
 
+
 // //Gets the data by genre
 // // READ
-app.get('/movies/genre/:genreName', passport.authenticate('jwt', { session: false }), (req, res) => {
-  Movies.find({ "Genre.Name": req.params.genreName }).then(movies => {
-    console.log(movies);
-    res.status(200).json(movies);
-  });
+app.get("/movies/genre/:genreName", (req, res) => {
+  const { genreName } = req.params;
+  const genre = movies.find(movie => movie.genre.name === genreName).genre;
+
+  if (genre) {
+    res.status(200).json(genre);
+  } else {
+    res.status(400).send("genre not found")
+  }
 });
 
 // // gets the data about the director
@@ -268,4 +284,7 @@ const port = process.env.PORT || 8080;
 app.listen(port, '0.0.0.0', () => {
   console.log('Listening on Port' + port);
 });
+
+
+
 
