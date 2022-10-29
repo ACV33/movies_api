@@ -220,7 +220,7 @@ app.delete('/users/:Username', passport.authenticate('jwt', { session: false }),
 //all working
 // returns list of all movies to user
 // READ
-app.get('/movies', /* passport.authenticate('jwt', { session: false }), */(req, res) => {
+app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
   Movies.find()
     .then(function (movies) {
       res.status(201).json(movies);
