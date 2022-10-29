@@ -22,7 +22,7 @@ mongoose.connect('mongodb+srv://Ashli-Vaccaro:HaHBK7bErWA8AXyX@ashli-cluster.dlf
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.urlencoded({ extended: true }));
+
 
 const cors = require('cors');
 
@@ -45,11 +45,6 @@ let auth = require('./auth')(app);
 const passport = require('passport');
 require('./passport');
 
-// logging with morgan (middleware)
-app.use(morgan("common"));
-
-// logging with morgan (middleware)
-app.use(morgan("common"));
 // logging with morgan (middleware)
 app.use(morgan("common"));
 
